@@ -1,0 +1,48 @@
+namespace: griddb
+
+griddb:
+  metadata:
+    defines: metadata
+    name: "GridDB: Open Source Time Series Database for IoT"
+    description: Toshiba GridDB is a highly scalable, in-memory NoSQL time series database optimized for IoT and Big Data.
+    website: https://griddb.net/
+    publisher: monk.io
+    icon: https://griddb-pro.azureedge.net/en/wp-content/themes/monstroid2-child/assets/images/logo_w@2x.png 
+  defines: runnable
+  variables:
+    image_tag:
+      type: string
+      value: 4.6.1-focal
+    cluster_name:
+      env: GRIDDB_CLUSTER_NAME
+      type: string
+      value: monk
+    password:
+      env: GRIDDB_PASSWORD
+      type: string
+      value: monk
+    notif_port:
+      env: NOTIFICATION_PORT
+      type: string
+      value: 31999
+    notif_member:
+      env: NOTIFICATION_MEMBER
+      type: string
+      value: 1
+    notif_address:
+      env: NOTIFICATION_ADDRESS
+      type: string
+      value: 239.0.0.1
+    volume_local:
+      type: string
+      value: <- `${monk-volume-path}/grdidb`
+  containers:
+    db:
+      image: 'griddb/griddb'
+      image-tag: <- `${image_tag}`
+  services:
+    mssql-svc:
+      port: <- `${notif_port}`
+      container: db
+      protocol: tcp
+      host-port: <- `${notif_port}`
