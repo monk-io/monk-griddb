@@ -1,6 +1,6 @@
 ---
 namespace: griddb
-griddb:
+base:
   metadata:
     defines: metadata
     name: GridDB Open Source Time Series Database for IoT
@@ -15,6 +15,13 @@ griddb:
     website: https://griddb.net/
     publisher: monk.io
     icon: https://griddb-pro.azureedge.net/en/wp-content/themes/monstroid2-child/assets/images/logo_w@2x.png
+  containers:
+    db:
+      image: griddb/griddb
+      image-tag: <- `${image_tag}`
+
+griddb:
+  inherits: griddb/base
   defines: runnable
   variables:
     image_tag:
@@ -40,10 +47,6 @@ griddb:
       env: NOTIFICATION_ADDRESS
       type: string
       value: 239.0.0.1
-  containers:
-    db:
-      image: griddb/griddb
-      image-tag: <- `${image_tag}`
   services:
     db-svc:
       port: <- `${notif_port}`
