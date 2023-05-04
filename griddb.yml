@@ -35,10 +35,6 @@ griddb:
       env: GRIDDB_PASSWORD
       type: string
       value: monk
-    notif_port:
-      env: NOTIFICATION_PORT
-      type: string
-      value: 31999
     notif_member:
       env: NOTIFICATION_MEMBER
       type: string
@@ -49,7 +45,6 @@ griddb:
       value: 239.0.0.1
   services:
     db-svc:
-      port: <- `${notif_port}`
+      port: 31999
       container: db
       protocol: tcp
-      host-port: <- `${notif_port}`
