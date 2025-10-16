@@ -1,0 +1,139 @@
+---
+title: GridDB
+description: Ready-to-run GridDB container template you can run directly or inherit to integrate a scalable time-series database optimized for IoT and big data into your stack.
+primary_category: database
+tags: [griddb, time-series, database, template, runnable, iot, big-data]
+integration_type: template
+hosting_models: [self-hosted]
+website_url: https://griddb.net/
+docs_url: https://griddb.net/en/docs/
+publisher: monk.io
+---
+
+## Overview
+
+This template provides a production‑ready GridDB instance as a Monk runnable. You can:
+
+- Run it directly to get a managed GridDB container with sensible defaults
+- Inherit it in your own runnable to seamlessly add a high-performance time-series database to your stack
+
+It exposes GridDB on port 31999, persists data to a host volume, and can be configured with cluster settings for distributed deployments.
+
+## What this template manages
+
+- GridDB container (`griddb/griddb` image, configurable tag)
+- Network service on port 31999
+- Persistent volumes for data storage
+- Optional cluster configuration and authentication
+
+## Quick start (run directly)
+
+1) Load templates
+
+```bash
+monk load MANIFEST
+```
+
+2) Run GridDB with defaults
+
+```bash
+monk run griddb/griddb
+```
+
+3) Customize configuration (recommended via inheritance)
+
+Running directly uses the defaults defined in this template's `variables`. Secrets added with `monk secrets add` will not affect this runnable unless you inherit it and reference those secrets.
+
+- Preferred: inherit and replace variables with `secret("...")` as shown below.
+- Alternative: fork/clone and edit the `variables` in `griddb.yml`, then `monk load MANIFEST` and run.
+
+Once started, connect to `localhost:31999` (or the runnable hostname inside Monk networks) using the configured credentials.
+
+## Configuration
+
+Key variables you can customize in this template:
+
+```yaml
+variables:
+  image_tag: "4.6.1-focal"         # container image tag
+  cluster_name: "monk"             # cluster name (env: GRIDDB_CLUSTER_NAME)
+  password: "monk"                 # admin password (env: GRIDDB_PASSWORD)
+  notif_member: "1"                # notification member count (env: NOTIFICATION_MEMBER)
+  notif_address: "239.0.0.1"       # multicast address (env: NOTIFICATION_ADDRESS)
+```
+
+Data is persisted using GridDB's internal storage mechanisms. The database uses a hybrid in-memory and on-disk architecture for optimal performance.
+
+## Use by inheritance (recommended for apps)
+
+Inherit the GridDB runnable in your application and declare a connection. Example:
+
+```yaml
+namespace: myapp
+tsdb:
+  defines: runnable
+  inherits: griddb/griddb
+api:
+  defines: runnable
+  containers:
+    api:
+      image: myorg/iot-api
+  connections:
+    timeseries-db:
+      runnable: tsdb
+      service: db-svc
+  variables:
+    griddb-host:
+      value: <- connection-hostname("timeseries-db")
+    griddb-port:
+      value: <- connection-port("timeseries-db")
+    griddb-cluster:
+      value: <- secret("griddb-cluster-name")
+    griddb-password:
+      value: <- secret("griddb-password")
+```
+
+Then set the secrets once and run your app group:
+
+```bash
+monk secrets add -g griddb-cluster-name="production-cluster"
+monk secrets add -g griddb-password="STRONG_PASSWORD"
+monk run myapp/api
+```
+
+## Ports and connectivity
+
+- Service: `db-svc` on TCP port `31999`
+- From other runnables in the same process group, use `connection-hostname("<connection-name>")` to resolve the GridDB host.
+
+## Persistence and configuration
+
+- GridDB uses an internal hybrid storage architecture combining in-memory and on-disk persistence
+- Data is automatically persisted according to GridDB's configuration
+- For cluster deployments, configure the `notif_member` and `notif_address` variables appropriately
+
+## Features
+
+- In-memory and on-disk hybrid architecture
+- Time-series data optimization
+- High-speed data ingestion
+- SQL-like query language (TQL)
+- ACID transaction support
+- Horizontal scalability with multi-node clusters
+- Multi-master replication support
+
+## Related templates
+
+- Combine with `grafana/` for time-series visualization
+- Integrate with `telegraf/` for metrics collection
+- Use with IoT data ingestion pipelines
+
+## Troubleshooting
+
+- If you changed the `password` but the container has existing data, authentication may fail. Either reset the data volume or update the password configuration.
+- For cluster deployments, ensure all nodes can communicate on the configured multicast address.
+- Check logs:
+
+```bash
+monk logs -l 500 -f griddb/griddb
+```
